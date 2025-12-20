@@ -63,6 +63,58 @@ ansible/inventories/staging/
 This approach ensures infrastructure consistency and eliminates the need for
 hardcoded IP addresses during configuration.
 
+#### Infrastructure Configuration
+
+As part of the staging environment setup, secure access to private
+infrastructure components is established before deploying Kubernetes
+and observability services.
+
+##### 1️⃣ OpenVPN Deployment (Private Subnet Access)
+
+An OpenVPN server is provisioned to provide secure administrative access
+to EC2 instances located in private subnets. This approach avoids direct
+public exposure of internal nodes and closely follows real-world
+production security practices.
+
+The OpenVPN server is configured and managed using Ansible.
+
+**Connectivity test:**
+
+```bash
+ansible -i inventories/staging/openvpn.ini openvpn -m ping
+```
+
+If the connectivity test is successful, the OpenVPN server is deployed using:
+
+```
+ansible-playbook -i inventories/staging/openvpn.ini playbooks/openvpn_setup.yml
+```
+
+After the deployment completes, the OpenVPN client configuration file
+is automatically generated and fetched to the local management machine.
+
+Copy the client configuration file to the OpenVPN client directory:
+
+```
+cp vpn/devops.ovpn /mnt/c/Users/<username>/OpenVPN/config/
+```
+
+Example (Windows user):
+
+```
+cp vpn/devops.ovpn /mnt/c/Users/phat4/OpenVPN/config/
+```
+
+Once the VPN connection is established, administrators can securely
+access EC2 instances in private subnets via SSH:
+
+```
+ssh -i key_pair/k0s_key ubuntu@10.0.1.167
+```
+
+
+This VPN-based access model ensures that all Kubernetes nodes and observability components remain isolated from direct internet access while still being fully manageable for deployment and testing purposes.
+
 ---
 
 ## Author
