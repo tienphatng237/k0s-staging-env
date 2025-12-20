@@ -1,0 +1,17 @@
+- name: Ensure netfilter-persistent is installed
+  apt:
+    name: netfilter-persistent
+    state: present
+    update_cache: yes
+
+- name: Enable NAT for VPN traffic
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    source: "{{ openvpn_network }}/24"
+    out_interface: "{{ openvpn_private_iface }}"
+    jump: MASQUERADE
+    state: present
+
+- name: Save iptables rules
+  command: netfilter-persistent save

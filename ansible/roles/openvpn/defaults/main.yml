@@ -1,0 +1,21 @@
+openvpn_port: 1194
+openvpn_proto: udp
+
+openvpn_network: 10.8.0.0
+openvpn_netmask: 255.255.255.0
+
+openvpn_server_dir: /etc/openvpn/server
+easy_rsa_dir: /etc/openvpn/easy-rsa
+
+openvpn_client_name: devops
+openvpn_public_ip: "{{ ansible_host }}"
+
+openvpn_private_iface: ens5
+
+# VPC ROUTE (BẮT BUỘC TÁCH NETWORK + NETMASK)
+vpc_network: 10.0.0.0
+vpc_netmask: 255.255.0.0
+
+openvpn_dns:
+  - 8.8.8.8
+  - 1.1.1.1

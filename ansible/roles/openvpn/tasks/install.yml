@@ -1,0 +1,82 @@
+- name: Install OpenVPN and dependencies
+  apt:
+    name:
+      - openvpn
+      - easy-rsa
+      - iptables-persistent
+    update_cache: yes
+
+- name: Enable IP forwarding
+  sysctl:
+    name: net.ipv4.ip_forward
+    value: "1"
+    state: present
+    reload: yes
+
+- name: Create OpenVPN server directory
+  file:
+    path: "{{ openvpn_server_dir }}"
+    state: directory
+    mode: "0755"
+
+- name: Initialize easy-rsa directory
+  command: make-cadir {{ easy_rsa_dir }}
+  args:
+    creates: "{{ easy_rsa_dir }}/easyrsa"
+
+- name: Initialize PKI
+  command: ./easyrsa init-pki
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki"
+
+- name: Build CA
+  command: ./easyrsa --batch build-ca nopass
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/ca.crt"
+
+- name: Generate server certificate
+  command: ./easyrsa --batch build-server-full server nopass
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/server.crt"
+
+- name: Generate client certificate
+  command: ./easyrsa --batch build-client-full devops nopass
+  args:
+    chdir: "{{ easy_rsa_dir }}"
+    creates: "{{ easy_rsa_dir }}/pki/issued/devops.crt"
+
+- name: Copy certificates to OpenVPN directory
+  copy:
+    src: "{{ easy_rsa_dir }}/pki/{{ item.src }}"
+    dest: "{{ openvpn_server_dir }}/{{ item.dest }}"
+    remote_src: yes
+  loop:
+    - { src: ca.crt, dest: ca.crt }
+    - { src: issued/server.crt, dest: server.crt }
+    - { src: private/server.key, dest: server.key }
+
+- name: Deploy OpenVPN server config
+  template:
+    src: server.conf.j2
+    dest: "{{ openvpn_server_dir }}/server.conf"
+  notify: Restart OpenVPN
+
+- name: Configure NAT for VPN traffic
+  iptables:
+    table: nat
+    chain: POSTROUTING
+    source: "{{ openvpn_network }}/24"
+    out_interface: ens5
+    jump: MASQUERADE
+
+- name: Save iptables rules
+  command: netfilter-persistent save
+
+- name: Enable and start OpenVPN server
+  systemd:
+    name: openvpn-server@server
+    enabled: yes
+    state: started
