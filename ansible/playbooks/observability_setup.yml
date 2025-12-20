@@ -1,0 +1,19 @@
+- name: Observability | Monitoring node
+  hosts: obser-1
+  become: yes
+  roles:
+    - { role: common, tags: [common, observability] }
+    
+    - { role: kubeconfig, tags: [kubeconfig, observability] }
+
+
+    - { role: helm, tags: [helm, observability] }
+
+    - { role: observability/prometheus, tags: [observability, prometheus] }
+
+    - { role: observability/grafana, tags: [observability, grafana] }
+    - { role: observability/grafana/datasources, tags: [observability, grafana_datasource] }
+
+    - { role: observability/kube_state_metrics, tags: [observability, kube-state-metrics] }
+
+    - { role: observability/node_exporter, tags: [observability, node-exporter] }
