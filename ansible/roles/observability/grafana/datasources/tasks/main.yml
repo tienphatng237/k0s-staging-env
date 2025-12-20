@@ -1,0 +1,27 @@
+# =========================
+# GRAFANA DATASOURCES
+# =========================
+- name: Ensure datasource directory exists
+  file:
+    path: "{{ grafana_provisioning_dir }}"
+    state: directory
+    mode: '0755'
+  tags: [grafana_datasource]
+
+- name: Provision Prometheus datasource
+  template:
+    src: prometheus-ds.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/prometheus.yml"
+  tags: [grafana_datasource, datasource_prometheus]
+
+- name: Provision Loki datasource
+  template:
+    src: loki-ds.yml.j2
+    dest: "{{ grafana_provisioning_dir }}/loki.yml"
+  tags: [grafana_datasource, datasource_loki]
+
+- name: Restart Grafana after datasource update
+  systemd:
+    name: grafana-server
+    state: restarted
+  tags: [grafana_datasource]
