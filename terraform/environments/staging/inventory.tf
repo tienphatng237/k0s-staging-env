@@ -21,12 +21,21 @@ resource "local_file" "observability_inventory" {
   filename = "${path.root}/../../../ansible/inventories/staging/observability.ini"
 
   content = <<-EOF
-[observability]
-%{for idx, inst in module.compute.observability~}
-obser-${idx + 1} ansible_host=${inst.private_ip}
-%{endfor~}
+# ================================
+# Observability Inventory (Staging)
+# ================================
+
+[monitoring]
+obser-1 ansible_host=${module.compute.observability[0].private_ip}
+
+[logging]
+obser-2 ansible_host=${module.compute.observability[1].private_ip}
+
+[all:vars]
+loki_host=${module.compute.observability[1].private_ip}
 EOF
 }
+
 
 
 resource "local_file" "openvpn_inventory" {
