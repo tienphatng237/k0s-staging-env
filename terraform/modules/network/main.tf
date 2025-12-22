@@ -74,3 +74,12 @@ resource "aws_route_table_association" "private" {
   subnet_id      = aws_subnet.private[count.index].id
   route_table_id = aws_route_table.private.id
 }
+
+# =====================================================
+# Route: Private subnet -> OpenVPN (VPN return path)
+# =====================================================
+resource "aws_route" "private_to_openvpn" {
+  route_table_id         = aws_route_table.private.id
+  destination_cidr_block = "10.8.0.0/24"
+  network_interface_id   = var.openvpn_eni_id
+}

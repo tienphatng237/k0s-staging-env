@@ -102,3 +102,61 @@ resource "aws_security_group" "observability" {
     cidr_blocks = ["0.0.0.0/0"]
   }
 }
+
+# EKS Control Plane Security Group 
+resource "aws_security_group" "eks_control_plane" {
+  name   = "eks-control-plane-sg"
+  vpc_id = var.vpc_id
+
+  # Control plane ↔ Node communication
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+# EKS Node Group Security Group
+resource "aws_security_group" "eks_nodes" {
+  name   = "eks-nodes-sg"
+  vpc_id = var.vpc_id
+
+  # Node to node communication
+  ingress {
+    from_port   = 0
+    to_port     = 65535
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  # Kubelet API
+  ingress {
+    from_port   = 10250
+    to_port     = 10250
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  # Control plane to node
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = [var.vpc_cidr]
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
