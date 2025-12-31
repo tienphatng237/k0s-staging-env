@@ -49,6 +49,6 @@ resource "local_file" "openvpn_inventory" {
 
   content = <<-EOF
 [openvpn]
-vpn ansible_host=${module.openvpn.instance.public_ip}
+vpn ansible_host=${module.openvpn.public_ip}
 EOF
 }

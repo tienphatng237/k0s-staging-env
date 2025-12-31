@@ -40,6 +40,8 @@ module "network" {
   azs             = local.azs
   private_subnets = local.private_subnets
   public_subnet   = local.public_subnet
+
+  openvpn_eni_id  = module.openvpn.eni_id
 }
 
 module "security" {
@@ -80,3 +82,4 @@ module "openvpn" {
   public_subnet_id = module.network.public_subnet_id
   openvpn_sg_id    = module.security.openvpn_sg_id
 }
+
